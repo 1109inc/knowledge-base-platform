@@ -116,10 +116,43 @@ const deleteDocument = async (req, res) => {
   }
 };
 
+const searchDocuments = async (req, res) => {
+  const { q } = req.query;
+
+  if (!q || q.trim() === "") {
+    return res.status(400).json({ message: "Search query is required" });
+  }
+
+  try {
+    const documents = await Document.find({
+      $and: [
+        {
+          $or: [
+            { isPublic: true },
+            { author: req.user.id }
+          ]
+        },
+        {
+          $or: [
+            { title: { $regex: q, $options: "i" } },
+            { content: { $regex: q, $options: "i" } }
+          ]
+        }
+      ]
+    }).sort({ updatedAt: -1 });
+
+    res.status(200).json({ documents });
+  } catch (error) {
+    console.error("Search error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   createDocument,
   getAccessibleDocuments,
   getDocumentById,
   updateDocument,
   deleteDocument,
+  searchDocuments,
 };
