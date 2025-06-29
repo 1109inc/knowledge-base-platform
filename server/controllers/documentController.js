@@ -93,9 +93,33 @@ const updateDocument = async (req, res) => {
   }
 };
 
+const deleteDocument = async (req, res) => {
+  const docId = req.params.id;
+
+  try {
+    const document = await Document.findById(docId);
+
+    if (!document) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    if (document.author.toString() !== req.user.id) {
+      return res.status(403).json({ message: "You are not allowed to delete this document" });
+    }
+
+    await document.deleteOne();
+
+    res.status(200).json({ message: "Document deleted successfully" });
+  } catch (error) {
+    console.error("Delete document error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   createDocument,
   getAccessibleDocuments,
   getDocumentById,
   updateDocument,
+  deleteDocument,
 };
