@@ -19,12 +19,13 @@ This document outlines the high-level system architecture for the Knowledge Base
 ## 📐 System Architecture Diagram
 ```
 [User Browser]
-     ↓
+  ↓
 [React Frontend]
-     ↓ (HTTP API calls - Axios/Fetch)
+  ↓ (HTTP API calls)
 [Express.js Backend API] ←→ [JWT Middleware]
-     ↓
-[MongoDB Database]
+  ↓                       ↘
+[MongoDB Database]     [Mailtrap SMTP]  ← for password reset emails
+
 ```
 
 ---
@@ -50,7 +51,7 @@ This document outlines the high-level system architecture for the Knowledge Base
   - Document creation/editing/sharing
   - Mentioning and permission logic
   - Full-text search using MongoDB
-
+  - Sends reset-password emails using Mailtrap SMTP sandbox
 ---
 
 ### 3. **MongoDB Database**
@@ -69,10 +70,15 @@ This document outlines the high-level system architecture for the Knowledge Base
 
 ---
 
-## 🛠️ Optional Enhancements (Future Phases)
+## 🛠️ Optional Enhancements (Bonus Features Implemented)
 
-- Version control (document history)
-- Email notifications
+- ✅ Version control (document history)
+- ✅ Compare versions (basic diff view)
+- ✅ Email notifications via Mailtrap (reset password)
+
+---
+
+## ⏭️ Still Planned (Future Work)
 - Admin dashboard
 - Analytics and activity logs
 
