@@ -22,4 +22,23 @@ const createDocument = async (req, res) => {
   }
 };
 
-module.exports = { createDocument };
+const getAccessibleDocuments = async (req, res) => {
+  try {
+    const documents = await Document.find({
+      $or: [
+        { isPublic: true },
+        { author: req.user.id }, // only user's private docs for now
+      ],
+    }).sort({ updatedAt: -1 });
+
+    res.status(200).json({ documents });
+  } catch (error) {
+    console.error("Get documents error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = {
+  createDocument,
+  getAccessibleDocuments,
+};
