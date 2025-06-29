@@ -1,11 +1,14 @@
-# Node.js
-node_modules/
-.env
+# Node modules
+client/node_modules/
+server/node_modules/
 
-# React build
-build/
-dist/
+# Environment files
+client/.env
+server/.env
 
-# OS/IDE files
+# Build output
+client/build/
+
+# OS/IDE
 .DS_Store
 .vscode/
