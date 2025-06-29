@@ -13,7 +13,10 @@ const protect = (req, res, next) => {
   try {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { id: decoded.userId }; // Attach user to request
+    req.user = {
+      id: decoded.userId,
+      email: decoded.email, // add this
+    }; // Attach user to request
     next();
   } catch (error) {
     return res.status(401).json({ message: "Unauthorized: Invalid token" });

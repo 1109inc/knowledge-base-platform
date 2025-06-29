@@ -24,11 +24,14 @@ const createDocument = async (req, res) => {
 
 const getAccessibleDocuments = async (req, res) => {
   try {
+    const userEmail = req.user.email; // we'll attach email to req.user in a sec
+
     const documents = await Document.find({
       $or: [
         { isPublic: true },
-        { author: req.user.id }, // only user's private docs for now
-      ],
+        { author: req.user.id },
+        { mentions: userEmail }
+      ]
     }).sort({ updatedAt: -1 });
 
     res.status(200).json({ documents });
