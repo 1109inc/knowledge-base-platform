@@ -16,12 +16,14 @@ A Confluence-like collaborative documentation platform built with React, Node.js
 
 ## 🎯 Core Features
 
-- User Registration, Login, Forgot Password (Email)
-- Create, Edit, View Documents (WYSIWYG)
-- Global Search across documents
-- @Mentions and Auto-Sharing
-- Public/Private Document Permissions
-
+- JWT Authentication: Register, Login, Forgot & Reset Password via Email
+- Create, Edit, Delete, and View Rich Text Documents (WYSIWYG)
+- Public, Private, Shared Access Controls
+- @Mention users to auto-grant view access
+- Manual Sharing with view/edit roles
+- Full Document Search (title + content)
+- Version History: Track all edits with timestamp and editor info
+- Diff View: Compare any two versions
 ---
 
 ## 🧠 Project Planning

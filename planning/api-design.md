@@ -59,7 +59,7 @@ This document outlines all backend RESTful API endpoints for the core features o
   "isPublic": false
 }
 ```
-### PUT /api/documents/:id
+### PUT `/api/documents/:id`
 - Update a document (if author or editor)
 - Body (partial or full):
 ```json
@@ -84,7 +84,7 @@ This document outlines all backend RESTful API endpoints for the core features o
   "username": "johndoe"
 }
 ```
-### POST /api/documents/:id/share
+### POST `/api/documents/:id/share`
 - Add user to private document access
 - Body:
 ```json
@@ -93,7 +93,7 @@ This document outlines all backend RESTful API endpoints for the core features o
   "access": "view"  // or "edit"
 }
 ```
-### DELETE /api/documents/:id/share
+### DELETE `/api/documents/:id/share`
 - Remove a user’s access
 - Body:
 ```json
@@ -101,6 +101,18 @@ This document outlines all backend RESTful API endpoints for the core features o
   "email": "user@example.com"
 }
 ```
+### GET `/api/documents/:id/versions`
+- Get version history of a document
+
+### GET `/api/documents/:id/diff?version1=1&version2=3`
+- Compare two versions of a document (by index)
+- Returns differences in title and content
+
 ## 🔐 JWT Auth Flow
 - All protected routes require following http header: `Authorization: Bearer \<token>`
 
+## 🧪 Tested With
+
+- ✅ Postman
+- ✅ JWT Bearer Tokens
+- ✅ Mailtrap SMTP (for reset-password flow)
