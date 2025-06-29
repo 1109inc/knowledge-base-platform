@@ -62,8 +62,40 @@ const getDocumentById = async (req, res) => {
   }
 };
 
+const updateDocument = async (req, res) => {
+  const docId = req.params.id;
+  const { title, content } = req.body;
+
+  try {
+    const document = await Document.findById(docId);
+
+    if (!document) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    if (document.author.toString() !== req.user.id) {
+      return res.status(403).json({ message: "You are not allowed to edit this document" });
+    }
+
+    if (title) document.title = title;
+    if (content) document.content = content;
+    document.updatedAt = Date.now();
+
+    await document.save();
+
+    res.status(200).json({
+      message: "Document updated successfully",
+      document,
+    });
+  } catch (error) {
+    console.error("Update document error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   createDocument,
   getAccessibleDocuments,
   getDocumentById,
+  updateDocument,
 };
