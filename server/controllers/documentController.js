@@ -292,6 +292,53 @@ const getDocumentVersions = async (req, res) => {
   }
 };
 
+const compareDocumentVersions = async (req, res) => {
+  const { id } = req.params;
+  const { version1, version2 } = req.query;
+
+  try {
+    const doc = await Document.findById(id);
+    if (!doc) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    // Ensure version indexes are valid numbers
+    const v1 = parseInt(version1);
+    const v2 = version2 === "current" ? "current" : parseInt(version2);
+
+    if (isNaN(v1) || (v2 !== "current" && isNaN(v2))) {
+      return res.status(400).json({ message: "Invalid version indexes" });
+    }
+
+    const versionData1 = doc.versions[v1];
+    const versionData2 = v2 === "current" ? doc : doc.versions[v2];
+
+    if (!versionData1 || !versionData2) {
+      return res.status(404).json({ message: "One or both versions not found" });
+    }
+
+    const titleDiff = {
+      from: versionData1.title || "",
+      to: versionData2.title || ""
+    };
+
+    const contentDiff = {
+      from: versionData1.content || "",
+      to: versionData2.content || ""
+    };
+
+    res.status(200).json({
+      version1: v1,
+      version2: v2,
+      titleDiff,
+      contentDiff
+    });
+  } catch (error) {
+    console.error("Compare versions error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   createDocument,
   getAccessibleDocuments,
@@ -303,4 +350,5 @@ module.exports = {
   shareDocument,
   removeSharedUser,
   getDocumentVersions,
+  compareDocumentVersions,
 };
