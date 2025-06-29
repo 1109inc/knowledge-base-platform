@@ -148,6 +148,41 @@ const searchDocuments = async (req, res) => {
   }
 };
 
+const mentionUser = async (req, res) => {
+  const docId = req.params.id;
+  const { email } = req.body;
+
+  try {
+    const document = await Document.findById(docId);
+
+    if (!document) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    // Only the author can mention
+    if (document.author.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Only the author can mention users" });
+    }
+
+    // Don't add duplicate mentions
+    if (document.mentions.includes(email)) {
+      return res.status(400).json({ message: "User already mentioned" });
+    }
+
+    // Add to mentions
+    document.mentions.push(email);
+    await document.save();
+
+    res.status(200).json({
+      message: "User mentioned successfully",
+      mentions: document.mentions,
+    });
+  } catch (error) {
+    console.error("Mention user error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   createDocument,
   getAccessibleDocuments,
@@ -155,4 +190,5 @@ module.exports = {
   updateDocument,
   deleteDocument,
   searchDocuments,
+  mentionUser,
 };
