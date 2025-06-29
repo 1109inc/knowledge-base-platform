@@ -11,9 +11,12 @@ This document describes the MongoDB collections and schema structure for the cor
   _id: ObjectId,
   email: String, // unique
   passwordHash: String,
+  resetPasswordToken: String, // for password reset
+  resetPasswordExpires: Date, // expires in 1 hour
   createdAt: Date,
   updatedAt: Date
 }
+
 ```
 ## 📄 Document Schema
 
@@ -24,28 +27,33 @@ This document describes the MongoDB collections and schema structure for the cor
   content: String, // WYSIWYG HTML
   author: ObjectId (ref: User),
   isPublic: Boolean,
-  mentions: [String], // e.g., ['johndoe']
+  mentions: [String], // e.g., ['johndoe@example.com']
+  sharedWith: [
+    {
+      email: String,
+      access: String // 'view' or 'edit'
+    }
+  ],
+  versions: [
+    {
+      title: String,
+      content: String,
+      editedAt: Date,
+      editor: String // email of user
+    }
+  ],
   createdAt: Date,
   updatedAt: Date
 }
-```
-## 🔐 Access Control Schema
-- This controls who can view/edit each private document.
 
-```js
-{
-  _id: ObjectId,
-  documentId: ObjectId (ref: Document),
-  userId: ObjectId (ref: User),
-  accessType: String // 'view' or 'edit'
-}
 ```
 ## 🔍 Notes on Relationships
 - Document.author → references User
-- AccessControl.documentId + userId → controls private access
+- Document.sharedWith → controls private access
 - mentions[] → used to auto-grant view access
 
-## 🔐 Indexing Suggestions
+## 🧠 Indexing Suggestions
 - User.email → unique index
-- Document.title, Document.content → for full-text search
-- Compound index on AccessControl.documentId + userId
+- Document.title + content → text index for full-text search
+- Document.mentions → optional index for mentions-based search
+- Document.sharedWith.email → for fast access checks
