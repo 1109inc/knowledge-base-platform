@@ -80,6 +80,14 @@ const updateDocument = async (req, res) => {
       return res.status(403).json({ message: "You are not allowed to edit this document" });
     }
 
+    // Save current version before updating
+    document.versions.push({
+      title: document.title,
+      content: document.content,
+      editor: req.user.email, // requires JWT to include email
+      editedAt: new Date()
+    });
+
     if (title) document.title = title;
     if (content) document.content = content;
     document.updatedAt = Date.now();
@@ -261,6 +269,29 @@ const removeSharedUser = async (req, res) => {
   }
 };
 
+const getDocumentVersions = async (req, res) => {
+  try {
+    const doc = await Document.findById(req.params.id);
+
+    if (!doc) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    const isOwnerOrMentioned = doc.author.toString() === req.user.id ||
+                               doc.mentions.includes(req.user.email) ||
+                               doc.sharedWith.some(u => u.email === req.user.email);
+
+    if (!doc.isPublic && !isOwnerOrMentioned) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    res.status(200).json({ versions: doc.versions });
+  } catch (error) {
+    console.error("Get versions error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   createDocument,
   getAccessibleDocuments,
@@ -271,4 +302,5 @@ module.exports = {
   mentionUser,
   shareDocument,
   removeSharedUser,
+  getDocumentVersions,
 };

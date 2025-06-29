@@ -37,6 +37,17 @@ const documentSchema = new mongoose.Schema(
       ],
       default: [],
     },
+    versions: {
+      type: [
+        {
+          title: String,
+          content: String,
+          editedAt: { type: Date, default: Date.now },
+          editor: String, // store email or user ID
+        },
+      ],
+      default: [],
+    },
   },
   { timestamps: true }
 );
