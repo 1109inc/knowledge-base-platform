@@ -24,6 +24,19 @@ const documentSchema = new mongoose.Schema(
       type: [String], // e.g., ["johndoe", "jane@example.com"]
       default: [],
     },
+    sharedWith: {
+      type: [
+        {
+          email: String,
+          access: {
+            type: String,
+            enum: ["view", "edit"],
+            default: "view",
+          },
+        },
+      ],
+      default: [],
+    },
   },
   { timestamps: true }
 );

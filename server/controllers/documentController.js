@@ -186,6 +186,43 @@ const mentionUser = async (req, res) => {
   }
 };
 
+const shareDocument = async (req, res) => {
+  const docId = req.params.id;
+  const { email, access } = req.body;
+
+  if (!email || !["view", "edit"].includes(access)) {
+    return res.status(400).json({ message: "Email and valid access level are required" });
+  }
+
+  try {
+    const document = await Document.findById(docId);
+
+    if (!document) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    if (document.author.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Only the author can share this document" });
+    }
+
+    const alreadyShared = document.sharedWith.find((user) => user.email === email);
+    if (alreadyShared) {
+      return res.status(400).json({ message: "User already has access" });
+    }
+
+    document.sharedWith.push({ email, access });
+    await document.save();
+
+    res.status(200).json({
+      message: "User shared successfully",
+      sharedWith: document.sharedWith
+    });
+  } catch (error) {
+    console.error("Share error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   createDocument,
   getAccessibleDocuments,
@@ -194,4 +231,5 @@ module.exports = {
   deleteDocument,
   searchDocuments,
   mentionUser,
+  shareDocument,
 };
