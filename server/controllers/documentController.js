@@ -223,6 +223,44 @@ const shareDocument = async (req, res) => {
   }
 };
 
+const removeSharedUser = async (req, res) => {
+  const docId = req.params.id;
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  try {
+    const document = await Document.findById(docId);
+
+    if (!document) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    if (document.author.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Only the author can remove shared users" });
+    }
+
+    const originalLength = document.sharedWith.length;
+    document.sharedWith = document.sharedWith.filter(user => user.email !== email);
+
+    if (document.sharedWith.length === originalLength) {
+      return res.status(400).json({ message: "User was not shared with" });
+    }
+
+    await document.save();
+
+    res.status(200).json({
+      message: "User access removed successfully",
+      sharedWith: document.sharedWith
+    });
+  } catch (error) {
+    console.error("Remove share error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   createDocument,
   getAccessibleDocuments,
@@ -232,4 +270,5 @@ module.exports = {
   searchDocuments,
   mentionUser,
   shareDocument,
+  removeSharedUser,
 };
