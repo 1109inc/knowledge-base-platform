@@ -1,0 +1,11 @@
+# Node.js
+node_modules/
+.env
+
+# React build
+build/
+dist/
+
+# OS/IDE files
+.DS_Store
+.vscode/
