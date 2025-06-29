@@ -38,7 +38,32 @@ const getAccessibleDocuments = async (req, res) => {
   }
 };
 
+const getDocumentById = async (req, res) => {
+  const docId = req.params.id;
+
+  try {
+    const document = await Document.findById(docId);
+
+    if (!document) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    const isAuthor = document.author.toString() === req.user.id;
+    const isPublic = document.isPublic;
+
+    if (!isPublic && !isAuthor) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    res.status(200).json({ document });
+  } catch (error) {
+    console.error("Get document by ID error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   createDocument,
   getAccessibleDocuments,
+  getDocumentById,
 };
