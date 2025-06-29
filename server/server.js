@@ -12,6 +12,11 @@ const app = express();
 app.use(cors());
 app.use(express.json()); // To parse JSON bodies
 
+const authRoutes = require("./routes/authRoutes"); // Add this line
+
+// after middleware
+app.use("/api/auth", authRoutes); // Add this line
+
 app.get("/", (req, res) => {
   res.send("Knowledge Base Platform API is running");
 });
