@@ -24,19 +24,26 @@ const createDocument = async (req, res) => {
 
 const getAccessibleDocuments = async (req, res) => {
   try {
-    const userEmail = req.user.email; // we'll attach email to req.user in a sec
+    const userEmail = req.user.email;
 
-    const documents = await Document.find({
-      $or: [
-        { isPublic: true },
-        { author: req.user.id },
-        { mentions: userEmail }
-      ]
-    }).sort({ updatedAt: -1 });
+    const publicDocs = await Document.find({ isPublic: true });
 
-    res.status(200).json({ documents });
-  } catch (error) {
-    console.error("Get documents error:", error.message);
+    const ownDocs = await Document.find({ author: req.user.id });
+
+    const sharedDocs = await Document.find({
+      sharedWith: { $elemMatch: { email: userEmail } },
+    });
+
+    const allDocs = [...publicDocs, ...ownDocs, ...sharedDocs];
+
+    // Optional: remove duplicates if needed
+    const uniqueDocs = Array.from(
+      new Map(allDocs.map((doc) => [doc._id.toString(), doc])).values()
+    );
+
+    res.status(200).json({ documents: uniqueDocs });
+  } catch (err) {
+    console.error("Get accessible docs error:", err.message);
     res.status(500).json({ message: "Server error" });
   }
 };
