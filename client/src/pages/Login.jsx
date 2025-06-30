@@ -57,6 +57,12 @@ const Login = () => {
         />
         <button type="submit">Login</button>
       </form>
+      <p className="text-sm text-center">
+        Forgot your password?{" "}
+        <a href="/forgot-password" className="text-blue-600 hover:underline">
+          Reset it
+        </a>
+      </p>
       <p>Don't have an account? <a href="/register">Register</a></p>
     </div>
   );
