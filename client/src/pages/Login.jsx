@@ -26,6 +26,7 @@ const Login = () => {
     try {
       const res = await axios.post("/auth/login", formData);
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("userEmail", res.data.user.email); // ✅ MUST BE SET
       navigate("/dashboard");
     } catch (err) {
       console.error(err);

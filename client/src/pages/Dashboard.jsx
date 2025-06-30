@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "../api/axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Dashboard = () => {
   const [documents, setDocuments] = useState([]);
@@ -30,13 +30,20 @@ const Dashboard = () => {
       <h2>Your Documents</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
 
+      <Link to="/create">
+        <button style={{ marginBottom: "1rem" }}>+ Create New Document</button>
+      </Link>
+
       {documents.length === 0 ? (
         <p>No documents found.</p>
       ) : (
         <ul>
           {documents.map((doc) => (
             <li key={doc._id}>
-              <strong>{doc.title}</strong> — {doc.isPublic ? "Public" : "Private"}
+              <Link to={`/documents/${doc._id}`}>
+                <strong>{doc.title}</strong>
+              </Link>{" "}
+              — {doc.isPublic ? "Public" : "Private"}
             </li>
           ))}
         </ul>
