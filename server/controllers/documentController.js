@@ -134,31 +134,29 @@ const deleteDocument = async (req, res) => {
 };
 
 const searchDocuments = async (req, res) => {
-  const { q } = req.query;
+  const userId = req.user.id;
+  const email = req.user.email;
+  const query = req.query.q;
 
-  if (!q || q.trim() === "") {
-    return res.status(400).json({ message: "Search query is required" });
-  }
+  if (!query) return res.status(400).json({ message: "Query required" });
 
   try {
-    const documents = await Document.find({
+    const docs = await Document.find({
       $and: [
         {
           $or: [
+            { author: userId },
             { isPublic: true },
-            { author: req.user.id }
+            { sharedWith: { $elemMatch: { email } } }
           ]
         },
         {
-          $or: [
-            { title: { $regex: q, $options: "i" } },
-            { content: { $regex: q, $options: "i" } }
-          ]
+          $text: { $search: query }
         }
       ]
     }).sort({ updatedAt: -1 });
 
-    res.status(200).json({ documents });
+    res.status(200).json({ documents: docs });
   } catch (error) {
     console.error("Search error:", error.message);
     res.status(500).json({ message: "Server error" });

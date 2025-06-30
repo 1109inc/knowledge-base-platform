@@ -5,16 +5,24 @@ import { useNavigate, Link } from "react-router-dom";
 const Dashboard = () => {
   const [documents, setDocuments] = useState([]);
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState(""); // 🧠 Step 1
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchDocs = async () => {
+    const fetchDocuments = async () => {
       try {
-        const res = await axios.get("/documents");
-        console.log("Documents API Response:", res.data);
-        setDocuments(res.data.documents); // ✅ FIXED
+        const url = searchTerm
+          ? `/documents/search?q=${encodeURIComponent(searchTerm)}`
+          : "/documents";
+
+        // Debug logs
+        console.log("📤 Sending request to:", url);
+        console.log("🔐 Token in localStorage:", localStorage.getItem("token"));
+
+        const res = await axios.get(url);
+        setDocuments(res.data.documents);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load documents", err);
         setError("Unauthorized or failed to load documents");
         if (err.response?.status === 401) {
           navigate("/"); // redirect to login if token invalid
@@ -22,8 +30,8 @@ const Dashboard = () => {
       }
     };
 
-    fetchDocs();
-  }, [navigate]);
+    fetchDocuments();
+  }, [searchTerm, navigate]); // 🚀 Step 3
 
   return (
     <div style={{ padding: "2rem" }}>
@@ -33,6 +41,15 @@ const Dashboard = () => {
       <Link to="/create">
         <button style={{ marginBottom: "1rem" }}>+ Create New Document</button>
       </Link>
+
+      {/* 🧩 Step 2: Search Input */}
+      <input
+        type="text"
+        placeholder="Search documents..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={{ marginBottom: "1rem", padding: "0.5rem", width: "300px" }}
+      />
 
       {documents.length === 0 ? (
         <p>No documents found.</p>
