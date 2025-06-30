@@ -298,7 +298,7 @@ const getDocumentVersions = async (req, res) => {
 
 const compareDocumentVersions = async (req, res) => {
   const { id } = req.params;
-  const { version1, version2 } = req.query;
+  const { old, new: newest } = req.query;
 
   try {
     const doc = await Document.findById(id);
@@ -307,8 +307,8 @@ const compareDocumentVersions = async (req, res) => {
     }
 
     // Ensure version indexes are valid numbers
-    const v1 = parseInt(version1);
-    const v2 = version2 === "current" ? "current" : parseInt(version2);
+    const v1 = parseInt(old);
+    const v2 = newest === "current" ? "current" : parseInt(newest);
 
     if (isNaN(v1) || (v2 !== "current" && isNaN(v2))) {
       return res.status(400).json({ message: "Invalid version indexes" });

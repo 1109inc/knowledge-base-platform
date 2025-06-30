@@ -13,6 +13,12 @@ const ViewDocument = () => {
   const [shareError, setShareError] = useState("");
   const [shareSuccess, setShareSuccess] = useState("");
 
+  // ✅ 1. Version compare state
+  const [versions, setVersions] = useState([]);
+  const [oldIndex, setOldIndex] = useState(null);
+  const [newIndex, setNewIndex] = useState(null);
+  const [diff, setDiff] = useState(null);
+
   const userEmail = localStorage.getItem("userEmail");
 
   const canEdit =
@@ -52,6 +58,18 @@ const ViewDocument = () => {
     };
 
     fetchDoc();
+
+    // ✅ 2. Fetch Versions on Load
+    const fetchVersions = async () => {
+      try {
+        const res = await axios.get(`/documents/${id}/versions`);
+        setVersions(res.data.versions || []);
+      } catch (err) {
+        console.error("Failed to fetch versions", err);
+      }
+    };
+
+    fetchVersions();
   }, [id, navigate]);
 
   const handleShare = async (e) => {
@@ -87,6 +105,83 @@ const ViewDocument = () => {
           ✏️ Edit Document
         </button>
       )}
+
+      {/* ✅ 3. Version Compare UI */}
+      {versions.length > 1 && (
+        <div style={{ marginTop: "2rem" }}>
+          <h4>Compare Versions</h4>
+
+          <label>Version 1: </label>
+          <select onChange={(e) => setOldIndex(parseInt(e.target.value))} defaultValue="">
+            <option disabled value="">
+              Select
+            </option>
+            {versions.map((v, idx) => (
+              <option key={idx} value={idx}>
+                {idx} — {v.editor} @ {new Date(v.editedAt).toLocaleString()}
+              </option>
+            ))}
+          </select>
+
+          <label style={{ marginLeft: "1rem" }}>Version 2: </label>
+          <select onChange={(e) => setNewIndex(parseInt(e.target.value))} defaultValue="">
+            <option disabled value="">
+              Select
+            </option>
+            {versions.map((v, idx) => (
+              <option key={idx} value={idx}>
+                {idx} — {v.editor} @ {new Date(v.editedAt).toLocaleString()}
+              </option>
+            ))}
+          </select>
+
+          <button
+            onClick={async () => {
+              if (oldIndex !== null && newIndex !== null) {
+                console.log("Comparing versions", oldIndex, newIndex);
+                const res = await axios.get(
+                  `/documents/${id}/diff?old=${oldIndex}&new=${newIndex}`
+                );
+                setDiff(res.data);
+              }
+            }}
+            disabled={oldIndex === null || newIndex === null}
+            style={{ marginLeft: "1rem" }}
+          >
+            Compare
+          </button>
+        </div>
+      )}
+
+      {/* ✅ 4. Show Diff Output */}
+      {diff && (
+        <div
+          style={{
+            marginTop: "1rem",
+            padding: "1rem",
+            border: "1px solid #ccc",
+          }}
+        >
+          <h4>Title Diff:</h4>
+          <p>
+            <strong>Version 1:</strong> {diff.titleDiff.from}
+          </p>
+          <p>
+            <strong>Version 2:</strong> {diff.titleDiff.to}
+          </p>
+
+          <h4>Content Diff:</h4>
+          <p>
+            <strong>Version 1:</strong>
+          </p>
+          <div dangerouslySetInnerHTML={{ __html: diff.contentDiff.from }} />
+          <p>
+            <strong>Version 2:</strong>
+          </p>
+          <div dangerouslySetInnerHTML={{ __html: diff.contentDiff.to }} />
+        </div>
+      )}
+
       {document.authorEmail === userEmail && (
         <div style={{ marginTop: "2rem" }}>
           <h3>🔗 Share Document</h3>
