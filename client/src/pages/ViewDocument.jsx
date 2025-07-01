@@ -43,6 +43,20 @@ const ViewDocument = () => {
     }
   };
 
+  // 3. Add handleDelete function
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this document?")) return;
+
+    try {
+      await axios.delete(`/documents/${document._id}`);
+      alert("Document deleted successfully.");
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Failed to delete the document.");
+    }
+  };
+
   useEffect(() => {
     const fetchDoc = async () => {
       try {
@@ -100,10 +114,19 @@ const ViewDocument = () => {
       <p>
         <strong>Visibility:</strong> {document.isPublic ? "Public" : "Private"}
       </p>
-      {canEdit && (
-        <button onClick={() => navigate(`/documents/${document._id}/edit`)}>
-          ✏️ Edit Document
-        </button>
+      {/* 2. Add Delete Button for authors */}
+      {document.authorEmail === userEmail && (
+        <>
+          <button onClick={() => navigate(`/documents/${document._id}/edit`)}>
+            ✏️ Edit Document
+          </button>
+          <button
+            onClick={handleDelete}
+            style={{ color: "white", backgroundColor: "red", marginLeft: "10px" }}
+          >
+            🗑️ Delete
+          </button>
+        </>
       )}
 
       {/* ✅ 3. Version Compare UI */}
