@@ -1,4 +1,4 @@
-# 📘 Knowledge Base Platform (Frigga Cloud Labs Assignment)
+# 📘 Knowledge Base Platform 
 
 A Confluence-like collaborative documentation platform built with React, Node.js, and MongoDB.
 
