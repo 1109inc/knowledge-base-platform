@@ -50,39 +50,63 @@ const getAccessibleDocuments = async (req, res) => {
 
 const getDocumentById = async (req, res) => {
   try {
-    const document = await Document.findById(req.params.id)
-      .populate("author", "email"); // 🔥 this adds `author.email`
+    const doc = await Document.findById(req.params.id).populate("author", "email");
 
-    if (!document) {
+    if (!doc) {
       return res.status(404).json({ message: "Document not found" });
     }
 
-    // check access (skip for now, assumed accessible)
+    const userEmail = req.user.email;
+    const sharedEntry = doc.sharedWith.find((u) => u.email === userEmail);
+    const hasAccess =
+      doc.isPublic || doc.author.email === userEmail || !!sharedEntry;
+
+    // ✅ LOG ACCESS INFO
+    console.log(`User: ${userEmail}`);
+    console.log(`Access type: ${
+      doc.author.email === userEmail
+        ? "author"
+        : sharedEntry
+        ? sharedEntry.access
+        : "none"
+    }`);
+
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Access denied" });
+    }
 
     res.status(200).json({
       document: {
-        ...document._doc,
-        authorEmail: document.author.email, // ✅ include email explicitly
+        ...doc._doc,
+        authorEmail: doc.author.email,
+        sharedWith: doc.sharedWith,
       },
     });
   } catch (err) {
-    console.error("Get doc by ID error:", err.message);
+    console.error("Get doc error", err.message);
     res.status(500).json({ message: "Server error" });
   }
 };
 
+
+
 const updateDocument = async (req, res) => {
   const docId = req.params.id;
-  const { title, content, isPublic } = req.body; // <-- add isPublic
+  const { title, content, isPublic } = req.body;
 
   try {
-    const document = await Document.findById(docId);
+    const document = await Document.findById(docId).populate("author", "email");
 
     if (!document) {
       return res.status(404).json({ message: "Document not found" });
     }
 
-    if (document.author.toString() !== req.user.id) {
+    const isAuthor = document.author._id.toString() === req.user.id;
+    const isEditor = document.sharedWith.some(
+      (u) => u.email === req.user.email && u.access === "edit"
+    );
+
+    if (!isAuthor && !isEditor) {
       return res.status(403).json({ message: "You are not allowed to edit this document" });
     }
 
@@ -94,9 +118,15 @@ const updateDocument = async (req, res) => {
       editedAt: new Date()
     });
 
+    // Update the fields if provided
     if (title) document.title = title;
     if (content) document.content = content;
-    if (typeof isPublic === "boolean") document.isPublic = isPublic; // <-- update visibility
+
+    // Only the author can change visibility
+    if (typeof isPublic === "boolean" && isAuthor) {
+      document.isPublic = isPublic;
+    }
+
     document.updatedAt = Date.now();
 
     await document.save();
@@ -110,6 +140,7 @@ const updateDocument = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 const deleteDocument = async (req, res) => {
   const docId = req.params.id;

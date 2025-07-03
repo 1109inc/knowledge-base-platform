@@ -12,8 +12,8 @@ const ViewDocument = () => {
   const [accessType, setAccessType] = useState("view");
   const [shareError, setShareError] = useState("");
   const [shareSuccess, setShareSuccess] = useState("");
+  const [removeMessage, setRemoveMessage] = useState("");
 
-  // ✅ 1. Version compare state
   const [versions, setVersions] = useState([]);
   const [oldIndex, setOldIndex] = useState(null);
   const [newIndex, setNewIndex] = useState(null);
@@ -21,32 +21,30 @@ const ViewDocument = () => {
 
   const userEmail = localStorage.getItem("userEmail");
 
-  const canEdit =
-    document &&
-    (document.authorEmail === userEmail ||
-      (document.sharedWith &&
-        document.sharedWith.some(
-          (u) => u.email === userEmail && u.access === "edit"
-        )));
+  const canEdit = !!document && (
+  document.authorEmail === userEmail ||
+  (Array.isArray(document.sharedWith) &&
+    document.sharedWith.some(
+      (u) => u.email?.trim() === userEmail?.trim() && u.access === "edit"
+    ))
+);
 
   const handleRemoveAccess = async (emailToRemove) => {
     try {
       await axios.delete(`/documents/${id}/share`, {
         data: { email: emailToRemove },
       });
-
-      // Refresh the document
       const res = await axios.get(`/documents/${id}`);
       setDocument(res.data.document);
+      setRemoveMessage("User removed successfully!");
+      setTimeout(() => setRemoveMessage(""), 3000);
     } catch (err) {
       console.error("Remove access failed", err);
     }
   };
 
-  // 3. Add handleDelete function
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this document?")) return;
-
     try {
       await axios.delete(`/documents/${document._id}`);
       alert("Document deleted successfully.");
@@ -63,17 +61,11 @@ const ViewDocument = () => {
         const res = await axios.get(`/documents/${id}`);
         setDocument(res.data.document);
       } catch (err) {
-        console.error(err);
         setError("Document not found or access denied.");
-        if (err.response?.status === 401) {
-          navigate("/"); // force login if token invalid
-        }
+        if (err.response?.status === 401) navigate("/");
       }
     };
 
-    fetchDoc();
-
-    // ✅ 2. Fetch Versions on Load
     const fetchVersions = async () => {
       try {
         const res = await axios.get(`/documents/${id}/versions`);
@@ -83,6 +75,7 @@ const ViewDocument = () => {
       }
     };
 
+    fetchDoc();
     fetchVersions();
   }, [id, navigate]);
 
@@ -90,6 +83,7 @@ const ViewDocument = () => {
     e.preventDefault();
     setShareError("");
     setShareSuccess("");
+    setRemoveMessage("");
 
     try {
       const res = await axios.post(`/documents/${id}/share`, {
@@ -98,146 +92,170 @@ const ViewDocument = () => {
       });
       setShareSuccess("User shared successfully!");
       setShareEmail("");
+      setAccessType("view");
+      const doc = await axios.get(`/documents/${id}`);
+      setDocument(doc.data.document);
     } catch (err) {
-      console.error(err);
       setShareError("Failed to share document.");
     }
   };
 
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
-  if (!document) return <p>Loading...</p>;
+  const inputStyle = {
+    padding: "10px",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
+    fontSize: "1rem",
+    width: "100%",
+    marginBottom: "1rem",
+  };
 
+  const buttonStyle = {
+    backgroundColor: "#2563eb",
+    color: "white",
+    padding: "10px 20px",
+    borderRadius: "6px",
+    border: "none",
+    cursor: "pointer",
+    fontWeight: "bold",
+  };
+
+  const containerStyle = {
+    maxWidth: "800px",
+    margin: "2rem auto",
+    padding: "1rem",
+    fontFamily: "Arial, sans-serif",
+  };
+
+  if (error) return <p style={{ color: "red", textAlign: "center" }}>{error}</p>;
+  if (!document) return <p style={{ textAlign: "center" }}>Loading...</p>;
+  
   return (
-    <div style={{ padding: "2rem" }}>
-      <h2>{document.title}</h2>
-      <div dangerouslySetInnerHTML={{ __html: document.content }} />
-      <p>
-        <strong>Visibility:</strong> {document.isPublic ? "Public" : "Private"}
-      </p>
-      {/* 2. Add Delete Button for authors */}
-      {document.authorEmail === userEmail && (
-        <>
-          <button onClick={() => navigate(`/documents/${document._id}/edit`)}>
-            ✏️ Edit Document
-          </button>
-          <button
-            onClick={handleDelete}
-            style={{ color: "white", backgroundColor: "red", marginLeft: "10px" }}
-          >
-            🗑️ Delete
-          </button>
-        </>
-      )}
+    <div style={containerStyle}>
+      <h2 style={{ fontSize: "1.8rem", fontWeight: "bold", marginBottom: "1rem" }}>{document.title}</h2>
+      <div dangerouslySetInnerHTML={{ __html: document.content }} style={{ whiteSpace: "pre-wrap", lineHeight: "1.5", marginBottom: "1rem" }} />
+      <p><strong>Visibility:</strong> {document.isPublic ? "Public" : "Private"}</p>
+      {console.log("canEdit:", canEdit)}
+      {canEdit && (
+  <div style={{ marginTop: "1rem" }}>
+    <button
+      style={buttonStyle}
+      onClick={() => navigate(`/documents/${document._id}/edit`)}
+    >
+      ✏️ Edit Document
+    </button>
 
-      {/* ✅ 3. Version Compare UI */}
+    {document.authorEmail === userEmail && (
+      <button
+        onClick={handleDelete}
+        style={{
+          ...buttonStyle,
+          marginLeft: "10px",
+          backgroundColor: "#dc3545",
+        }}
+      >
+        🗑️ Delete
+      </button>
+    )}
+  </div>
+)}
+
+
       {versions.length > 1 && (
         <div style={{ marginTop: "2rem" }}>
-          <h4>Compare Versions</h4>
+          <h3 style={{ fontSize: "1.2rem", fontWeight: "600" }}>Compare Versions</h3>
+          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+            <select onChange={(e) => setOldIndex(parseInt(e.target.value))} defaultValue="" style={inputStyle}>
+              <option disabled value="">Version 1</option>
+              {versions.map((v, idx) => (
+                <option key={idx} value={idx}>
+                  {idx} — {v.editor} @ {new Date(v.editedAt).toLocaleString()}
+                </option>
+              ))}
+            </select>
 
-          <label>Version 1: </label>
-          <select onChange={(e) => setOldIndex(parseInt(e.target.value))} defaultValue="">
-            <option disabled value="">
-              Select
-            </option>
-            {versions.map((v, idx) => (
-              <option key={idx} value={idx}>
-                {idx} — {v.editor} @ {new Date(v.editedAt).toLocaleString()}
-              </option>
-            ))}
-          </select>
-
-          <label style={{ marginLeft: "1rem" }}>Version 2: </label>
-          <select onChange={(e) => setNewIndex(parseInt(e.target.value))} defaultValue="">
-            <option disabled value="">
-              Select
-            </option>
-            {versions.map((v, idx) => (
-              <option key={idx} value={idx}>
-                {idx} — {v.editor} @ {new Date(v.editedAt).toLocaleString()}
-              </option>
-            ))}
-          </select>
+            <select onChange={(e) => setNewIndex(parseInt(e.target.value))} defaultValue="" style={inputStyle}>
+              <option disabled value="">Version 2</option>
+              {versions.map((v, idx) => (
+                <option key={idx} value={idx}>
+                  {idx} — {v.editor} @ {new Date(v.editedAt).toLocaleString()}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <button
             onClick={async () => {
               if (oldIndex !== null && newIndex !== null) {
-                console.log("Comparing versions", oldIndex, newIndex);
-                const res = await axios.get(
-                  `/documents/${id}/diff?old=${oldIndex}&new=${newIndex}`
-                );
+                const res = await axios.get(`/documents/${id}/diff?old=${oldIndex}&new=${newIndex}`);
                 setDiff(res.data);
               }
             }}
             disabled={oldIndex === null || newIndex === null}
-            style={{ marginLeft: "1rem" }}
+            style={{ ...buttonStyle, marginTop: "1rem" }}
           >
             Compare
           </button>
         </div>
       )}
 
-      {/* ✅ 4. Show Diff Output */}
       {diff && (
-        <div
-          style={{
-            marginTop: "1rem",
-            padding: "1rem",
-            border: "1px solid #ccc",
-          }}
-        >
-          <h4>Title Diff:</h4>
-          <p>
-            <strong>Version 1:</strong> {diff.titleDiff.from}
-          </p>
-          <p>
-            <strong>Version 2:</strong> {diff.titleDiff.to}
-          </p>
-
-          <h4>Content Diff:</h4>
-          <p>
-            <strong>Version 1:</strong>
-          </p>
+        <div style={{ marginTop: "2rem", padding: "1rem", border: "1px solid #ccc", borderRadius: "6px" }}>
+          <h4 style={{ fontWeight: "bold" }}>Title Diff:</h4>
+          <p><strong>Version 1:</strong> {diff.titleDiff.from}</p>
+          <p><strong>Version 2:</strong> {diff.titleDiff.to}</p>
+          <h4 style={{ fontWeight: "bold", marginTop: "1rem" }}>Content Diff:</h4>
+          <p><strong>Version 1:</strong></p>
           <div dangerouslySetInnerHTML={{ __html: diff.contentDiff.from }} />
-          <p>
-            <strong>Version 2:</strong>
-          </p>
+          <p><strong>Version 2:</strong></p>
           <div dangerouslySetInnerHTML={{ __html: diff.contentDiff.to }} />
         </div>
       )}
 
       {document.authorEmail === userEmail && (
         <div style={{ marginTop: "2rem" }}>
-          <h3>🔗 Share Document</h3>
-          <form onSubmit={handleShare}>
+          <h3 style={{ fontSize: "1.2rem", fontWeight: "600" }}>Share Document</h3>
+          <form onSubmit={handleShare} autoComplete="off">
             <input
               type="email"
               placeholder="Enter user email"
               value={shareEmail}
               onChange={(e) => setShareEmail(e.target.value)}
               required
+              style={inputStyle}
+              autoComplete="off"
             />
             <select
               value={accessType}
               onChange={(e) => setAccessType(e.target.value)}
+              style={inputStyle}
+              autoComplete="off"
             >
               <option value="view">View</option>
               <option value="edit">Edit</option>
             </select>
-            <button type="submit">Share</button>
+            <button type="submit" style={buttonStyle}>Share</button>
+            {shareError && <p style={{ color: "red", marginTop: "0.5rem" }}>{shareError}</p>}
+            {shareSuccess && <p style={{ color: "green", marginTop: "0.5rem" }}>{shareSuccess}</p>}
+            {removeMessage && <p style={{ color: "green", marginTop: "0.5rem" }}>{removeMessage}</p>}
           </form>
-          {shareError && <p style={{ color: "red" }}>{shareError}</p>}
-          {shareSuccess && <p style={{ color: "green" }}>{shareSuccess}</p>}
 
-          {canEdit && document.sharedWith && document.sharedWith.length > 0 && (
-            <div style={{ marginTop: "1rem" }}>
+          {canEdit && document.sharedWith?.length > 0 && (
+            <div style={{ marginTop: "1.5rem" }}>
               <h4>Shared With:</h4>
-              <ul>
+              <ul style={{ paddingLeft: "1rem" }}>
                 {document.sharedWith.map((user, idx) => (
-                  <li key={idx}>
+                  <li key={idx} style={{ marginBottom: "0.5rem" }}>
                     {user.email} — {user.access}
                     <button
                       onClick={() => handleRemoveAccess(user.email)}
-                      style={{ marginLeft: "1rem" }}
+                      style={{
+                        marginLeft: "1rem",
+                        padding: "5px 10px",
+                        border: "none",
+                        backgroundColor: "#eee",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                      }}
                     >
                       Remove
                     </button>
