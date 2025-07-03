@@ -93,14 +93,17 @@ const EditDocument = () => {
           required
         />
 
-        <label>
-          <input
-            type="checkbox"
-            checked={isPublic}
-            onChange={(e) => setIsPublic(e.target.checked)}
-          />{" "}
-          Make Public
-        </label>
+        {document.authorEmail === userEmail && (
+  <label>
+    <input
+      type="checkbox"
+      checked={isPublic}
+      onChange={(e) => setIsPublic(e.target.checked)}
+    />{" "}
+    Make Public
+  </label>
+)}
+
 
         <button type="submit" style={{ backgroundColor: "#007bff", color: "white", padding: "0.5rem 1rem", border: "none", borderRadius: "4px" }}>
           Save Changes
