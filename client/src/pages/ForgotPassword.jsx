@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "../api/axios";
+import { Link } from "react-router-dom";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -20,32 +21,108 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-semibold mb-4 text-center">Forgot Password</h2>
+    <div style={styles.container}>
+      <div style={styles.box}>
+        <h2 style={styles.heading}>Forgot your password?</h2>
+        <p style={styles.subtext}>
+          Enter the email address associated with your account, and we'll email you a link to reset your password.
+        </p>
 
-        {message && <p className="text-green-600">{message}</p>}
-        {error && <p className="text-red-600">{error}</p>}
+        {message && <p style={styles.success}>{message}</p>}
+        {error && <p style={styles.error}>{error}</p>}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} style={styles.form}>
           <input
             type="email"
-            placeholder="Enter your email"
-            className="w-full px-4 py-2 border rounded"
+            placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            style={styles.input}
           />
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-          >
-            Send Reset Link
+
+          <button type="submit" style={styles.button}>
+            Send reset link
           </button>
         </form>
+
+        <p style={styles.linkText}>
+          Remember your password?{" "}
+          <Link to="/" style={styles.link}>Sign in</Link>
+        </p>
       </div>
     </div>
   );
+};
+
+const styles = {
+  container: {
+    minHeight: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f6f8",
+    padding: "1rem",
+  },
+  box: {
+    backgroundColor: "#fff",
+    padding: "2rem",
+    borderRadius: "8px",
+    width: "100%",
+    maxWidth: "480px",
+    boxShadow: "0 0 10px rgba(0,0,0,0.05)",
+    textAlign: "center",
+    fontFamily: "system-ui",
+  },
+  heading: {
+    fontSize: "24px",
+    fontWeight: "600",
+    marginBottom: "0.5rem",
+  },
+  subtext: {
+    fontSize: "15px",
+    color: "#444",
+    marginBottom: "1.5rem",
+  },
+  success: {
+    color: "green",
+    marginBottom: "1rem",
+  },
+  error: {
+    color: "red",
+    marginBottom: "1rem",
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "1rem",
+  },
+  input: {
+    padding: "0.75rem",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
+    fontSize: "15px",
+  },
+  button: {
+    backgroundColor: "#0a66ff",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    padding: "0.75rem",
+    fontWeight: "bold",
+    fontSize: "15px",
+    cursor: "pointer",
+  },
+  linkText: {
+    marginTop: "1rem",
+    fontSize: "14px",
+    color: "#555",
+  },
+  link: {
+    color: "#0a66ff",
+    textDecoration: "none",
+    fontWeight: "500",
+  },
 };
 
 export default ForgotPassword;
