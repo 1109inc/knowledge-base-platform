@@ -8,6 +8,7 @@ const EditDocument = () => {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [isPublic, setIsPublic] = useState(true); // <-- add this
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -16,6 +17,7 @@ const EditDocument = () => {
         const res = await axios.get(`/documents/${id}`);
         setTitle(res.data.document.title);
         setContent(res.data.document.content);
+        setIsPublic(res.data.document.isPublic); // <-- set initial value
       } catch (err) {
         console.error(err);
         setError("Failed to load document");
@@ -33,6 +35,7 @@ const EditDocument = () => {
       await axios.put(`/documents/${id}`, {
         title,
         content,
+        isPublic, // <-- send this to backend
       });
 
       navigate(`/documents/${id}`);
@@ -71,6 +74,15 @@ const EditDocument = () => {
           onChange={(e) => setContent(e.target.value)}
           required
         />
+
+        <label>
+          <input
+            type="checkbox"
+            checked={isPublic}
+            onChange={(e) => setIsPublic(e.target.checked)}
+          />{" "}
+          Make Public
+        </label>
 
         <button type="submit">Save Changes</button>
       </form>

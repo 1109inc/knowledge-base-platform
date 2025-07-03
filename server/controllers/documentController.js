@@ -73,7 +73,7 @@ const getDocumentById = async (req, res) => {
 
 const updateDocument = async (req, res) => {
   const docId = req.params.id;
-  const { title, content } = req.body;
+  const { title, content, isPublic } = req.body; // <-- add isPublic
 
   try {
     const document = await Document.findById(docId);
@@ -90,12 +90,13 @@ const updateDocument = async (req, res) => {
     document.versions.push({
       title: document.title,
       content: document.content,
-      editor: req.user.email, // requires JWT to include email
+      editor: req.user.email,
       editedAt: new Date()
     });
 
     if (title) document.title = title;
     if (content) document.content = content;
+    if (typeof isPublic === "boolean") document.isPublic = isPublic; // <-- update visibility
     document.updatedAt = Date.now();
 
     await document.save();
