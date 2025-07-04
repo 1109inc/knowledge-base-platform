@@ -1,29 +1,42 @@
+// Import necessary hooks and modules
 import { useState } from "react";
-import axios from "../api/axios";
-import { useNavigate } from "react-router-dom";
+import axios from "../api/axios"; // Custom axios instance for API calls
+import { useNavigate } from "react-router-dom"; // Hook for navigation
 
+/**
+ * Component for creating a new document.
+ * Allows users to input a title, content, and set the document's visibility (public/private).
+ * @returns {JSX.Element} The create document form.
+ */
 const CreateDocument = () => {
+  // Hook for programmatic navigation
   const navigate = useNavigate();
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [isPublic, setIsPublic] = useState(true);
-  const [error, setError] = useState("");
+  // State variables for form inputs and error handling
+  const [title, setTitle] = useState(""); // Document title
+  const [content, setContent] = useState(""); // Document content
+  const [isPublic, setIsPublic] = useState(true); // Document visibility (true for public, false for private)
+  const [error, setError] = useState(""); // Error message
 
+  /**
+   * Handles form submission to create a new document.
+   * @param {React.FormEvent<HTMLFormElement>} e - The form submission event.
+   */
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+    e.preventDefault(); // Prevent default form submission behavior
+    setError(""); // Clear any previous errors
 
     try {
-      const res = await axios.post("/documents", {
+      // Send a POST request to create the document
+      await axios.post("/documents", {
         title,
         content,
         isPublic,
       });
-      console.log("Document created:", res.data);
+      // Navigate to the dashboard after successful creation
       navigate("/dashboard");
     } catch (err) {
-      console.error(err);
+      // Set an error message if document creation fails
       setError("Failed to create document.");
     }
   };
@@ -31,18 +44,22 @@ const CreateDocument = () => {
   return (
     <div style={styles.container}>
       <h2 style={styles.heading}>New document</h2>
+      {/* Display error message if any */}
       {error && <p style={styles.error}>{error}</p>}
 
+      {/* Form for creating a new document */}
       <form onSubmit={handleSubmit} style={styles.form}>
+        {/* Input field for document title */}
         <input
           type="text"
           placeholder="Untitled"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           style={styles.input}
-          required
+          required // Title is required
         />
 
+        {/* Toggle switch for document visibility */}
         <div style={styles.toggleWrapper}>
           <label style={styles.toggleLabel}>
             <input
@@ -55,21 +72,24 @@ const CreateDocument = () => {
           </label>
         </div>
 
+        {/* Textarea for document content */}
         <textarea
           rows={10}
           placeholder="Start writing..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
           style={styles.textarea}
-          required
+          required // Content is required
         />
 
+        {/* Submit button to save the document */}
         <button type="submit" style={styles.button}>Save</button>
       </form>
     </div>
   );
 };
 
+// Styles for the CreateDocument component
 const styles = {
   container: {
     padding: "2rem",
@@ -126,7 +146,7 @@ const styles = {
     gap: "0.5rem",
   },
   toggleInput: {
-    transform: "scale(1.4)",
+    transform: "scale(1.4)", // Makes the checkbox slightly larger
     cursor: "pointer",
   },
   toggleText: {
@@ -135,4 +155,5 @@ const styles = {
   },
 };
 
+// Export the CreateDocument component
 export default CreateDocument;
