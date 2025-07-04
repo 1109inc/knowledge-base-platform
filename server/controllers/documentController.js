@@ -19,12 +19,20 @@ const createDocument = async (req, res) => {
       mentions: mentions || [], // Default to an empty array if mentions are not provided
       author: req.user.id, // Author ID is set by the JWT authentication middleware
     });
-
+    document.versions.push({
+      title: document.title,
+      content: document.content,
+      editor: req.user.email, // Record who created this version
+      editedAt: new Date() // Record the time of creation
+    });
+    await document.save();
     // Respond with success message and the created document
     res.status(201).json({
       message: "Document created successfully",
       document,
     });
+    // Save the current state of the document as a new version
+    
   } catch (error) {
     // Handle server errors
     res.status(500).json({ message: "Server error" });
@@ -142,14 +150,6 @@ const updateDocument = async (req, res) => {
       return res.status(403).json({ message: "You are not allowed to edit this document" });
     }
 
-    // Save the current state of the document as a new version
-    document.versions.push({
-      title: document.title,
-      content: document.content,
-      editor: req.user.email, // Record who edited this version
-      editedAt: new Date() // Record the time of edit
-    });
-
     // Update document fields if they are provided in the request
     if (title) document.title = title;
     if (content) document.content = content;
@@ -161,7 +161,12 @@ const updateDocument = async (req, res) => {
 
     // Update the 'updatedAt' timestamp
     document.updatedAt = Date.now();
-
+    document.versions.push({
+      title: document.title,
+      content: document.content,
+      editor: req.user.email, // Record who edited this version
+      editedAt: new Date() // Record the time of edit
+    });
     // Save the updated document
     await document.save();
 
